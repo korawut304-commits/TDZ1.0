@@ -27,6 +27,7 @@ jobs:
 
       - name: Prepare resources
         run: |
+          rm -rf android-res/mipmap-* android-res/drawable-*
           mkdir -p android-res/values
 
           if [ ! -f android-res/values/strings.xml ]; then
@@ -60,11 +61,16 @@ jobs:
             )
 
             for folder in "${!DENSITIES[@]}"; do
+              drawable_folder="drawable-${folder#mipmap-}"
               mkdir -p "android-res/$folder"
-              mkdir -p "android-res/drawable-${folder#mipmap-}"
+              mkdir -p "android-res/$drawable_folder"
               size="${DENSITIES[$folder]}"
+
               out_mipmap="android-res/$folder/ic_launcher.png"
-              out_drawable="android-res/drawable-${folder#mipmap-}/ic_launcher.png"
+              out_mipmap_round="android-res/$folder/ic_launcher_round.png"
+              out_drawable="android-res/$drawable_folder/ic_launcher.png"
+              out_drawable_round="android-res/$drawable_folder/ic_launcher_round.png"
+              out_drawable_love="android-res/$drawable_folder/love.png"
 
               if command -v convert >/dev/null 2>&1; then
                 convert "$ICON_SRC" -resize "${size}!" "$out_mipmap"
@@ -75,7 +81,11 @@ jobs:
               else
                 cp "$ICON_SRC" "$out_mipmap"
               fi
+
+              cp "$out_mipmap" "$out_mipmap_round"
               cp "$out_mipmap" "$out_drawable"
+              cp "$out_mipmap" "$out_drawable_round"
+              cp "$out_mipmap" "$out_drawable_love"
             done
           else
             echo "WARNING: No icon PNG found in repo! Default LÖVE icon will be used."
