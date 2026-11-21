@@ -1,0 +1,62 @@
+name: Build TDZ 1.0 Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'TDZ1.0.love'
+      - '.github/workflows/build-apk.yml'
+      - 'android-res/**'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get game files
+        uses: actions/checkout@v4
+
+      - name: Verify TDZ1.0.love exists
+        run: |
+          test -f "./TDZ1.0.love"
+          ls -lh "./TDZ1.0.love"
+
+      - name: Prepare resources
+        run: |
+          mkdir -p android-res/values
+          if [ ! -f android-res/values/strings.xml ]; then
+            cat << 'EOF' > android-res/values/strings.xml
+          <resources>
+            <string name="app_name">TDZ 1.0</string>
+          </resources>
+          EOF
+          fi
+          ls -laR android-res
+
+      - name: Build Android APK
+        uses: love-actions/love-actions-android@v2
+        with:
+          app-name: "TDZ 1.0"
+          bundle-id: "com.korawut.tdz1"
+          resource-path: "./android-res"
+          love-ref: "11.5"
+          love-package: "./TDZ1.0.love"
+          product-name: "tdz1"
+          version-string: "1.0"
+          version-code: 100
+          output-folder: "./build"
+
+      - name: Check build output
+        run: |
+          ls -laR ./build
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: TDZ1.0-Android-APK
+          path: build/**/*.apk
+          if-no-files-found: error
+
