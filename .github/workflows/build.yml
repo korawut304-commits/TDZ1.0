@@ -3,11 +3,13 @@ name: Build TDZ 1.0 Android APK
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - 'TDZ1.0.love'
       - '.github/workflows/build-apk.yml'
       - 'android-res/**'
-      - 'icon.png'
+      - '**.png'
 
 permissions:
   contents: read
@@ -38,14 +40,19 @@ jobs:
           fi
 
           ICON_SRC=""
-          if [ -f "./icon.png" ]; then
-            ICON_SRC="./icon.png"
-          elif [ -f "./android-res/icon.png" ]; then
-            ICON_SRC="./android-res/icon.png"
+          for candidate in "./icon.png" "./android-res/icon.png" "./res/icon.png" "./assets/icon.png"; do
+            if [ -f "$candidate" ]; then
+              ICON_SRC="$candidate"
+              break
+            fi
+          done
+
+          if [ -z "$ICON_SRC" ]; then
+            ICON_SRC=$(find . -maxdepth 3 -type f -iname "*icon*.png" ! -path "./.git/*" ! -path "./android-res/mipmap-*" ! -path "./android-res/drawable-*" | head -n 1)
           fi
 
           if [ -n "$ICON_SRC" ]; then
-            echo "Found icon source: $ICON_SRC"
+            echo "Using icon source: $ICON_SRC"
             declare -A DENSITIES=(
               ["mipmap-mdpi"]="48x48"
               ["mipmap-hdpi"]="72x72"
@@ -56,22 +63,28 @@ jobs:
 
             for folder in "${!DENSITIES[@]}"; do
               mkdir -p "android-res/$folder"
+              mkdir -p "android-res/drawable-${folder#mipmap-}"
               size="${DENSITIES[$folder]}"
+              out_mipmap="android-res/$folder/ic_launcher.png"
+              out_drawable="android-res/drawable-${folder#mipmap-}/ic_launcher.png"
+
               if command -v convert >/dev/null 2>&1; then
-                convert "$ICON_SRC" -resize "${size}!" "android-res/$folder/ic_launcher.png"
+                convert "$ICON_SRC" -resize "${size}!" "$out_mipmap"
               elif command -v ffmpeg >/dev/null 2>&1; then
                 w="${size%x*}"
                 h="${size#*x}"
-                ffmpeg -y -i "$ICON_SRC" -vf "scale=${w}:${h}" "android-res/$folder/ic_launcher.png" >/dev/null 2>&1
+                ffmpeg -y -i "$ICON_SRC" -vf "scale=${w}:${h}" "$out_mipmap" >/dev/null 2>&1
               else
-                cp "$ICON_SRC" "android-res/$folder/ic_launcher.png"
+                cp "$ICON_SRC" "$out_mipmap"
               fi
+              cp "$out_mipmap" "$out_drawable"
             done
           else
-            echo "No icon.png found, using default LÖVE icon."
+            echo "WARNING: No icon PNG found in repo! Default LÖVE icon will be used."
           fi
 
-          ls -laR android-res
+          echo "--- Generated android-res files ---"
+          find android-res -type f | sort
 
       - name: Build Android APK
         uses: love-actions/love-actions-android@v2
@@ -96,4 +109,3 @@ jobs:
           name: TDZ1.0-Android-APK
           path: build/**/*.apk
           if-no-files-found: error
-
