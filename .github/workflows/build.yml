@@ -3,8 +3,6 @@ name: Build TDZ 1.0 Android APK
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
     paths:
       - 'TDZ1.0.love'
       - '.github/workflows/build-apk.yml'
