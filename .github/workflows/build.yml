@@ -96,6 +96,7 @@ jobs:
           version-string: "1.0"
           version-code: 100
           output-folder: "./build"
+          icon-specifier: "@mipmap/ic_launcher"
 
       - name: Check build output
         run: |
