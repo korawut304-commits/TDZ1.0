@@ -7,6 +7,7 @@ on:
       - 'TDZ1.0.love'
       - '.github/workflows/build-apk.yml'
       - 'android-res/**'
+      - 'icon.png'
 
 permissions:
   contents: read
@@ -27,6 +28,7 @@ jobs:
       - name: Prepare resources
         run: |
           mkdir -p android-res/values
+
           if [ ! -f android-res/values/strings.xml ]; then
             cat << 'EOF' > android-res/values/strings.xml
           <resources>
@@ -34,6 +36,41 @@ jobs:
           </resources>
           EOF
           fi
+
+          ICON_SRC=""
+          if [ -f "./icon.png" ]; then
+            ICON_SRC="./icon.png"
+          elif [ -f "./android-res/icon.png" ]; then
+            ICON_SRC="./android-res/icon.png"
+          fi
+
+          if [ -n "$ICON_SRC" ]; then
+            echo "Found icon source: $ICON_SRC"
+            declare -A DENSITIES=(
+              ["mipmap-mdpi"]="48x48"
+              ["mipmap-hdpi"]="72x72"
+              ["mipmap-xhdpi"]="96x96"
+              ["mipmap-xxhdpi"]="144x144"
+              ["mipmap-xxxhdpi"]="192x192"
+            )
+
+            for folder in "${!DENSITIES[@]}"; do
+              mkdir -p "android-res/$folder"
+              size="${DENSITIES[$folder]}"
+              if command -v convert >/dev/null 2>&1; then
+                convert "$ICON_SRC" -resize "${size}!" "android-res/$folder/ic_launcher.png"
+              elif command -v ffmpeg >/dev/null 2>&1; then
+                w="${size%x*}"
+                h="${size#*x}"
+                ffmpeg -y -i "$ICON_SRC" -vf "scale=${w}:${h}" "android-res/$folder/ic_launcher.png" >/dev/null 2>&1
+              else
+                cp "$ICON_SRC" "android-res/$folder/ic_launcher.png"
+              fi
+            done
+          else
+            echo "No icon.png found, using default LÖVE icon."
+          fi
+
           ls -laR android-res
 
       - name: Build Android APK
