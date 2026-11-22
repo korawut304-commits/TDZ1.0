@@ -98,15 +98,16 @@ jobs:
         uses: love-actions/love-actions-android@v2
         with:
           app-name: "TDZ 1.1"
-          bundle-id: "com.korawut.tdz1.1"
+          bundle-id: "com.korawut.tdz1_1"
           resource-path: "./android-res"
           love-ref: "11.5"
           love-package: "./TDZ1.1.love"
-          product-name: "tdz1.1"
+          product-name: "tdz1_1"
           version-string: "1.1"
-          version-code: 100
+          version-code: 101
           output-folder: "./build"
           icon-specifier: "@mipmap/ic_launcher"
+
 
       - name: Check build output
         run: |
