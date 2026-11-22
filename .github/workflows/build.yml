@@ -1,10 +1,10 @@
-name: Build TDZ 1.0 Android APK
+name: Build TDZ 1.1 Android APK
 
 on:
   workflow_dispatch:
   push:
     paths:
-      - 'TDZ1.0.love'
+      - 'TDZ1.1.love'
       - '.github/workflows/build-apk.yml'
       - 'android-res/**'
       - '**.png'
@@ -20,10 +20,10 @@ jobs:
       - name: Get game files
         uses: actions/checkout@v4
 
-      - name: Verify TDZ1.0.love exists
+      - name: Verify TDZ1.1.love exists
         run: |
-          test -f "./TDZ1.0.love"
-          ls -lh "./TDZ1.0.love"
+          test -f "./TDZ1.1.love"
+          ls -lh "./TDZ1.1.love"
 
       - name: Prepare resources
         run: |
@@ -33,7 +33,7 @@ jobs:
           if [ ! -f android-res/values/strings.xml ]; then
             cat << 'EOF' > android-res/values/strings.xml
           <resources>
-            <string name="app_name">TDZ 1.0</string>
+            <string name="app_name">TDZ 1.1</string>
           </resources>
           EOF
           fi
@@ -97,13 +97,13 @@ jobs:
       - name: Build Android APK
         uses: love-actions/love-actions-android@v2
         with:
-          app-name: "TDZ 1.0"
-          bundle-id: "com.korawut.tdz1"
+          app-name: "TDZ 1.1"
+          bundle-id: "com.korawut.tdz1.1"
           resource-path: "./android-res"
           love-ref: "11.5"
-          love-package: "./TDZ1.0.love"
-          product-name: "tdz1"
-          version-string: "1.0"
+          love-package: "./TDZ1.1.love"
+          product-name: "tdz1.1"
+          version-string: "1.1"
           version-code: 100
           output-folder: "./build"
           icon-specifier: "@mipmap/ic_launcher"
@@ -115,6 +115,6 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: TDZ1.0-Android-APK
+          name: TDZ1.1-Android-APK
           path: build/**/*.apk
           if-no-files-found: error
